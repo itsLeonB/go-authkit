@@ -1,0 +1,70 @@
+package authkit
+
+import "context"
+
+// MWRequirements defines composable requirements for auth middleware.
+type MWRequirements uint8
+
+const (
+	// RequireAuth requires a valid access token with active session.
+	RequireAuth MWRequirements = 1 << iota
+	// RequireVerified requires the user's email to be verified.
+	RequireVerified
+)
+
+// Claim key constants used in JWT tokens.
+const (
+	ClaimUserID      = "userID"
+	ClaimSessionID   = "sessionID"
+	ClaimFingerprint = "fgp"
+	ClaimExp         = "exp"
+	ClaimIat         = "iat"
+)
+
+// VerifyToken validates an access token and fingerprint, returning claims.
+func (kit *AuthKit) VerifyToken(ctx context.Context, token, fingerprint string) (map[string]any, error) {
+	claims, err := kit.jwt.verifyToken(token)
+	if err != nil {
+		return nil, ErrTokenInvalid
+	}
+
+	// Verify fingerprint
+	expectedHash, ok := claims[ClaimFingerprint].(string)
+	if !ok || expectedHash == "" {
+		return nil, ErrTokenInvalid
+	}
+	if hashSHA256(fingerprint) != expectedHash {
+		return nil, ErrTokenInvalid
+	}
+
+	// Extract and validate session
+	sessionID, ok := claims[ClaimSessionID].(string)
+	if !ok || sessionID == "" {
+		return nil, ErrTokenInvalid
+	}
+	userID, ok := claims[ClaimUserID].(string)
+	if !ok || userID == "" {
+		return nil, ErrTokenInvalid
+	}
+
+	var loadErr error
+	cachedUserID, hit := kit.cache.Get(sessionID, func(_ string) (string, bool) {
+		session, err := kit.sessions.GetByID(ctx, sessionID)
+		if err != nil {
+			loadErr = err
+			return "", false
+		}
+		return session.UserID, true
+	})
+	if loadErr != nil {
+		return nil, loadErr
+	}
+	if !hit {
+		return nil, ErrSessionNotFound
+	}
+	if cachedUserID != userID {
+		return nil, ErrSessionNotFound
+	}
+
+	return claims, nil
+}
