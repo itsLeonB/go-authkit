@@ -1,6 +1,10 @@
 package authkit
 
-import "time"
+import (
+	"time"
+
+	"go.opentelemetry.io/otel/trace"
+)
 
 // Config holds all configuration needed by the auth library.
 type Config struct {
@@ -22,4 +26,7 @@ type Config struct {
 
 	// JWTDuration is the access token TTL.
 	JWTDuration time.Duration
+
+	// Tracer is an optional OpenTelemetry tracer. If nil, tracing is disabled.
+	Tracer trace.Tracer
 }

@@ -8,6 +8,7 @@ require (
 	github.com/itsLeonB/sekure v0.1.1
 	github.com/markbates/goth v1.82.0
 	github.com/stretchr/testify v1.11.1
+	go.opentelemetry.io/otel/trace v1.40.0
 )
 
 require (
@@ -50,7 +51,6 @@ require (
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel v1.40.0 // indirect
 	go.opentelemetry.io/otel/metric v1.40.0 // indirect
-	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.22.0 // indirect
 	golang.org/x/crypto v0.48.0 // indirect

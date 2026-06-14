@@ -15,6 +15,9 @@ import (
 // a verification email is sent and verified=false is returned. Otherwise
 // the user is verified immediately.
 func (kit *AuthKit) Register(ctx context.Context, email, password, slug string) (verified bool, err error) {
+	ctx, span := kit.startSpan(ctx, "AuthKit.Register")
+	defer endSpan(span)
+
 	isVerified := kit.cfg.VerificationURL == ""
 	err = kit.tx.WithinTransaction(ctx, func(ctx context.Context) error {
 		user, err := kit.users.FindByEmail(ctx, email)
@@ -68,6 +71,9 @@ func (kit *AuthKit) sendVerificationMail(ctx context.Context, user User, slug st
 
 // Login authenticates with email/password and returns a token set.
 func (kit *AuthKit) Login(ctx context.Context, email, password string) (TokenSet, error) {
+	ctx, span := kit.startSpan(ctx, "AuthKit.Login")
+	defer endSpan(span)
+
 	user, err := kit.users.FindByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, ErrUserNotFound) {
@@ -92,6 +98,9 @@ func (kit *AuthKit) Login(ctx context.Context, email, password string) (TokenSet
 
 // VerifyRegistration verifies a user's email using the registration token.
 func (kit *AuthKit) VerifyRegistration(ctx context.Context, token string) (TokenSet, error) {
+	ctx, span := kit.startSpan(ctx, "AuthKit.VerifyRegistration")
+	defer endSpan(span)
+
 	var result TokenSet
 	err := kit.tx.WithinTransaction(ctx, func(ctx context.Context) error {
 		claims, err := kit.jwt.verifyToken(token)
@@ -127,6 +136,9 @@ func (kit *AuthKit) VerifyRegistration(ctx context.Context, token string) (Token
 // SendPasswordReset sends a password reset email. Returns nil even if
 // the user is not found (prevents email enumeration).
 func (kit *AuthKit) SendPasswordReset(ctx context.Context, email string) error {
+	ctx, span := kit.startSpan(ctx, "AuthKit.SendPasswordReset")
+	defer endSpan(span)
+
 	return kit.tx.WithinTransaction(ctx, func(ctx context.Context) error {
 		user, err := kit.users.FindByEmail(ctx, email)
 		if err != nil {
@@ -178,6 +190,9 @@ func (kit *AuthKit) sendResetPasswordMail(ctx context.Context, user User, select
 
 // ResetPassword validates the reset token and sets a new password.
 func (kit *AuthKit) ResetPassword(ctx context.Context, token, newPassword string) (TokenSet, error) {
+	ctx, span := kit.startSpan(ctx, "AuthKit.ResetPassword")
+	defer endSpan(span)
+
 	var result TokenSet
 	err := kit.tx.WithinTransaction(ctx, func(ctx context.Context) error {
 		claims, err := kit.jwt.verifyToken(token)
@@ -230,6 +245,9 @@ func (kit *AuthKit) ResetPassword(ctx context.Context, token, newPassword string
 
 // Logout revokes the current session and all its refresh tokens.
 func (kit *AuthKit) Logout(ctx context.Context, sessionID string) error {
+	ctx, span := kit.startSpan(ctx, "AuthKit.Logout")
+	defer endSpan(span)
+
 	// Non-blocking hook — errors are logged by caller.
 	_ = kit.hooks.callBeforeLogout(ctx, sessionID)
 

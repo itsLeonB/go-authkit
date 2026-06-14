@@ -23,6 +23,9 @@ const (
 
 // VerifyToken validates an access token and fingerprint, returning claims.
 func (kit *AuthKit) VerifyToken(ctx context.Context, token, fingerprint string) (map[string]any, error) {
+	ctx, span := kit.startSpan(ctx, "AuthKit.VerifyToken")
+	defer endSpan(span)
+
 	claims, err := kit.jwt.verifyToken(token)
 	if err != nil {
 		return nil, ErrTokenInvalid

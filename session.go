@@ -10,6 +10,9 @@ import (
 
 // RefreshToken validates and rotates a refresh token, issuing new tokens.
 func (kit *AuthKit) RefreshToken(ctx context.Context, rawRefreshToken string) (TokenSet, error) {
+	ctx, span := kit.startSpan(ctx, "AuthKit.RefreshToken")
+	defer endSpan(span)
+
 	var result TokenSet
 	err := kit.tx.WithinTransaction(ctx, func(ctx context.Context) error {
 		rt, err := kit.getRefreshToken(ctx, rawRefreshToken)
