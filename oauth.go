@@ -94,6 +94,14 @@ func (kit *AuthKit) getOrCreateOAuthUser(ctx context.Context, info OAuthUserInfo
 }
 
 func (kit *AuthKit) createNewOAuthUser(ctx context.Context, info OAuthUserInfo) (User, bool, error) {
+	trusted, err := kit.providers.isTrusted(info.Provider)
+	if err != nil {
+		return User{}, false, err
+	}
+	if !trusted {
+		return User{}, false, ErrProviderDisabled
+	}
+
 	user, err := kit.users.FindByEmail(ctx, info.Email)
 	if err != nil && !errors.Is(err, ErrUserNotFound) {
 		return User{}, false, err
@@ -105,14 +113,6 @@ func (kit *AuthKit) createNewOAuthUser(ctx context.Context, info OAuthUserInfo) 
 			return User{}, false, err
 		}
 		created = true
-	}
-
-	trusted, err := kit.providers.isTrusted(info.Provider)
-	if err != nil {
-		return User{}, false, err
-	}
-	if !trusted {
-		return User{}, false, ErrProviderDisabled
 	}
 
 	if err = kit.oauth.Link(ctx, user.ID, info.Provider, info.ProviderID, info.Email); err != nil {

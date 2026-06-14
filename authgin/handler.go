@@ -145,7 +145,7 @@ func (h *Handler) SendPasswordReset() gin.HandlerFunc {
 	return server.Handler("AuthHandler.SendPasswordReset", http.StatusCreated, func(ctx *gin.Context) (any, error) {
 		var req struct {
 			Email        string `json:"email" binding:"required,email"`
-			CaptchaToken string `json:"captchaToken" binding:"required"`
+			CaptchaToken string `json:"captchaToken"`
 		}
 		if err := ctx.ShouldBindJSON(&req); err != nil {
 			return nil, err
@@ -209,6 +209,9 @@ func (h *Handler) Logout() gin.HandlerFunc {
 	return server.Handler("AuthHandler.Logout", http.StatusNoContent, func(ctx *gin.Context) (any, error) {
 		sessionID, _ := ctx.Get(authkit.ClaimSessionID)
 		sid, _ := sessionID.(string)
+		if sid == "" {
+			return nil, authkit.ErrSessionNotFound
+		}
 		if err := h.kit.Logout(ctx.Request.Context(), sid); err != nil {
 			return nil, err
 		}

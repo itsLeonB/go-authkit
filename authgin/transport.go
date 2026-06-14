@@ -83,8 +83,11 @@ func (ct *CookieTransport) ReadRefreshToken(r *http.Request) (string, error) {
 
 func (ct *CookieTransport) ReadFingerprint(r *http.Request) (string, error) {
 	c, err := r.Cookie(fingerprintCookie)
+	if errors.Is(err, http.ErrNoCookie) {
+		return "", nil
+	}
 	if err != nil {
-		return "", nil // fingerprint is best-effort
+		return "", err
 	}
 	return c.Value, nil
 }

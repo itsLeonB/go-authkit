@@ -2,6 +2,7 @@ package authkit
 
 import (
 	"context"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -338,7 +339,7 @@ func (m *mockTransactor) WithinTransaction(ctx context.Context, fn func(ctx cont
 // --- Test helpers ---
 
 func idStr(n int) string {
-	return "id-" + string(rune('0'+n))
+	return "id-" + strconv.Itoa(n)
 }
 
 func newTestKit(opts ...func(*AuthKit)) *AuthKit {
