@@ -65,7 +65,7 @@ func (ct *CookieTransport) SetTokens(w http.ResponseWriter, access, refresh, fin
 		Domain:   ct.cfg.Domain,
 		MaxAge:   int(ct.cfg.RefreshTTL.Seconds()),
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   ct.cfg.Secure,
 		SameSite: ct.cfg.SameSite,
 	})
 }

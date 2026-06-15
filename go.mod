@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/gin-gonic/gin v1.12.0
-	github.com/itsLeonB/ginkgo v0.6.0
+	github.com/itsLeonB/ginkgo v0.6.1
 	github.com/itsLeonB/sekure v0.1.1
 	github.com/markbates/goth v1.82.0
 	github.com/stretchr/testify v1.11.1
@@ -30,7 +30,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/itsLeonB/ezutil/v2 v2.4.0 // indirect
-	github.com/itsLeonB/ungerr v0.3.0 // indirect
+	github.com/itsLeonB/ungerr v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
