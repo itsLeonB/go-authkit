@@ -73,6 +73,10 @@ func (j *jwtService) verifyToken(tokenStr string) (map[string]any, error) {
 		jwt.WithExpirationRequired(),
 	)
 	if err != nil {
+		if errors.Is(err, jwt.ErrTokenSignatureInvalid) ||
+			errors.Is(err, jwt.ErrTokenInvalidIssuer) {
+			return nil, ErrTokenInvalid
+		}
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			return claims.Data, ErrTokenExpired
 		}
