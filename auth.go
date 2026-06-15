@@ -18,6 +18,10 @@ func (kit *AuthKit) Register(ctx context.Context, email, password, slug string) 
 	ctx, span := kit.startSpan(ctx, "AuthKit.Register")
 	defer endSpan(span)
 
+	if err := kit.hooks.callBeforeRegister(ctx, email); err != nil {
+		return false, err
+	}
+
 	isVerified := kit.cfg.VerificationURL == ""
 	err = kit.tx.WithinTransaction(ctx, func(ctx context.Context) error {
 		user, err := kit.users.FindByEmail(ctx, email)
@@ -93,11 +97,38 @@ func (kit *AuthKit) Login(ctx context.Context, email, password string) (TokenSet
 		return TokenSet{}, ErrInvalidCredentials
 	}
 
+	if kit.cfg.Stateless {
+		return kit.createStatelessToken(ctx, user)
+	}
 	return kit.createTokenAndSession(ctx, user)
+}
+
+// createStatelessToken builds a token with only an access token (no session/refresh).
+// Note: exp/iat are injected by the underlying JWT service (sekure) automatically.
+func (kit *AuthKit) createStatelessToken(ctx context.Context, user User) (TokenSet, error) {
+	claims := map[string]any{
+		ClaimUserID: user.ID,
+	}
+	if kit.hooks.ClaimsBuilder != nil {
+		var err error
+		claims, err = kit.hooks.ClaimsBuilder(ctx, user.ID, claims)
+		if err != nil {
+			return TokenSet{}, err
+		}
+	}
+	token, err := kit.jwt.createToken(claims)
+	if err != nil {
+		return TokenSet{}, err
+	}
+	return TokenSet{AccessToken: token}, nil
 }
 
 // VerifyRegistration verifies a user's email using the registration token.
 func (kit *AuthKit) VerifyRegistration(ctx context.Context, token string) (TokenSet, error) {
+	if kit.cfg.Stateless {
+		return TokenSet{}, ErrNotSupported
+	}
+
 	ctx, span := kit.startSpan(ctx, "AuthKit.VerifyRegistration")
 	defer endSpan(span)
 
@@ -136,6 +167,10 @@ func (kit *AuthKit) VerifyRegistration(ctx context.Context, token string) (Token
 // SendPasswordReset sends a password reset email. Returns nil even if
 // the user is not found (prevents email enumeration).
 func (kit *AuthKit) SendPasswordReset(ctx context.Context, email string) error {
+	if kit.cfg.Stateless {
+		return ErrNotSupported
+	}
+
 	ctx, span := kit.startSpan(ctx, "AuthKit.SendPasswordReset")
 	defer endSpan(span)
 
@@ -190,6 +225,10 @@ func (kit *AuthKit) sendResetPasswordMail(ctx context.Context, user User, select
 
 // ResetPassword validates the reset token and sets a new password.
 func (kit *AuthKit) ResetPassword(ctx context.Context, token, newPassword string) (TokenSet, error) {
+	if kit.cfg.Stateless {
+		return TokenSet{}, ErrNotSupported
+	}
+
 	ctx, span := kit.startSpan(ctx, "AuthKit.ResetPassword")
 	defer endSpan(span)
 
@@ -245,6 +284,10 @@ func (kit *AuthKit) ResetPassword(ctx context.Context, token, newPassword string
 
 // Logout revokes the current session and all its refresh tokens.
 func (kit *AuthKit) Logout(ctx context.Context, sessionID string) error {
+	if kit.cfg.Stateless {
+		return ErrNotSupported
+	}
+
 	ctx, span := kit.startSpan(ctx, "AuthKit.Logout")
 	defer endSpan(span)
 

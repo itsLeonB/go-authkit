@@ -8,6 +8,14 @@ import (
 
 // Config holds all configuration needed by the auth library.
 type Config struct {
+	// Stateless disables sessions, refresh tokens, and fingerprinting.
+	// Login returns only an access token. VerifyToken only validates JWT.
+	Stateless bool
+
+	// RequireFingerprint enables token fingerprinting. Ignored when Stateless is true.
+	// nil defaults to true.
+	RequireFingerprint *bool
+
 	// VerificationURL is the base URL for email verification links.
 	// Leave empty to skip email verification (user is verified on register).
 	VerificationURL string
@@ -29,4 +37,14 @@ type Config struct {
 
 	// Tracer is an optional OpenTelemetry tracer. If nil, tracing is disabled.
 	Tracer trace.Tracer
+}
+
+func (c Config) fingerprintEnabled() bool {
+	if c.Stateless {
+		return false
+	}
+	if c.RequireFingerprint == nil {
+		return true
+	}
+	return *c.RequireFingerprint
 }

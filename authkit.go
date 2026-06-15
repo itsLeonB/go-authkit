@@ -34,25 +34,33 @@ type Deps struct {
 
 // New creates a new AuthKit instance.
 func New(cfg Config, deps Deps, hooks Hooks) *AuthKit {
-	return &AuthKit{
-		cfg:       cfg,
-		hash:      newHashService(10),
-		jwt:       newJWTService(cfg.JWTIssuer, cfg.JWTSecret, cfg.JWTDuration),
-		tx:        deps.Tx,
-		users:     deps.Users,
-		sessions:  deps.Sessions,
-		refresh:   deps.Refresh,
-		resets:    deps.Resets,
-		oauth:     deps.OAuth,
-		mail:      deps.Mail,
-		cache:     deps.Cache,
-		state:     deps.State,
-		providers: newProviderService(deps.Providers),
-		hooks:     hooks,
+	kit := &AuthKit{
+		cfg:   cfg,
+		hash:  newHashService(10),
+		jwt:   newJWTService(cfg.JWTIssuer, cfg.JWTSecret, cfg.JWTDuration),
+		tx:    deps.Tx,
+		users: deps.Users,
+		hooks: hooks,
 	}
+
+	if !cfg.Stateless {
+		kit.sessions = deps.Sessions
+		kit.refresh = deps.Refresh
+		kit.resets = deps.Resets
+		kit.oauth = deps.OAuth
+		kit.mail = deps.Mail
+		kit.cache = deps.Cache
+		kit.state = deps.State
+		kit.providers = newProviderService(deps.Providers)
+	}
+
+	return kit
 }
 
 // Shutdown releases resources held by AuthKit.
 func (kit *AuthKit) Shutdown() error {
+	if kit.cfg.Stateless {
+		return nil
+	}
 	return kit.cache.Shutdown()
 }

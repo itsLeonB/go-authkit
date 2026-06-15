@@ -14,4 +14,5 @@ var (
 	ErrProviderDisabled        = errors.New("authkit: provider disabled")
 	ErrTooManyRequests         = errors.New("authkit: too many requests")
 	ErrInsecureCookieTransport = errors.New("authkit: when SameSite is None, Secure must be true")
+	ErrNotSupported            = errors.New("authkit: operation not supported in stateless mode")
 )
