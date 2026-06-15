@@ -59,8 +59,9 @@ func New(cfg Config, deps Deps, hooks Hooks) *AuthKit {
 
 // Shutdown releases resources held by AuthKit.
 func (kit *AuthKit) Shutdown() error {
-	if kit.cfg.Stateless {
+	if kit.cfg.Stateless || kit.cache == nil {
 		return nil
 	}
 	return kit.cache.Shutdown()
+}
 }
