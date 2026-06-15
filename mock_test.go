@@ -343,7 +343,7 @@ func idStr(n int) string {
 }
 
 func newTestKit(opts ...func(*AuthKit)) *AuthKit {
-	kit := New(Config{
+	kit, err := New(Config{
 		JWTIssuer:        "test",
 		JWTSecret:        "test-secret-that-is-long-enough-for-hs256-signing",
 		JWTDuration:      15 * time.Minute,
@@ -361,6 +361,9 @@ func newTestKit(opts ...func(*AuthKit)) *AuthKit {
 		Cache:    newMockSessionCache(),
 		State:    newMockStateStore(),
 	}, Hooks{})
+	if err != nil {
+		panic(err)
+	}
 	for _, o := range opts {
 		o(kit)
 	}

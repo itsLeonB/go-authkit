@@ -1,19 +1,35 @@
 package authkit
 
-import "github.com/itsLeonB/sekure"
+import "golang.org/x/crypto/bcrypt"
+
+const defaultBcryptCost = 10
 
 type hashService struct {
-	inner sekure.HashService
+	cost int
 }
 
 func newHashService(cost int) *hashService {
-	return &hashService{inner: sekure.NewHashService(cost)}
+	if cost <= 0 {
+		cost = defaultBcryptCost
+	}
+	return &hashService{cost: cost}
 }
 
 func (h *hashService) hash(password string) (string, error) {
-	return h.inner.Hash(password)
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), h.cost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashed), nil
 }
 
-func (h *hashService) verify(hash, password string) (bool, error) {
-	return h.inner.CheckHash(hash, password)
+func (h *hashService) verify(hashed, password string) (bool, error) {
+	err := bcrypt.CompareHashAndPassword([]byte(hashed), []byte(password))
+	if err != nil {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }

@@ -104,7 +104,6 @@ func (kit *AuthKit) Login(ctx context.Context, email, password string) (TokenSet
 }
 
 // createStatelessToken builds a token with only an access token (no session/refresh).
-// Note: exp/iat are injected by the underlying JWT service (sekure) automatically.
 func (kit *AuthKit) createStatelessToken(ctx context.Context, user User) (TokenSet, error) {
 	claims := map[string]any{
 		ClaimUserID: user.ID,

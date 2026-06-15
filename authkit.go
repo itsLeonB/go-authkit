@@ -32,12 +32,25 @@ type Deps struct {
 	Providers []ProviderConfig
 }
 
+func newJWT(cfg Config) *jwtService {
+	switch cfg.JWTAlgorithm {
+	case AlgorithmRS256:
+		return newJWTServiceRS256(cfg.JWTIssuer, cfg.JWTPrivateKey, cfg.JWTDuration)
+	default:
+		return newJWTServiceHS256(cfg.JWTIssuer, cfg.JWTSecret, cfg.JWTDuration)
+	}
+}
+
 // New creates a new AuthKit instance.
-func New(cfg Config, deps Deps, hooks Hooks) *AuthKit {
+func New(cfg Config, deps Deps, hooks Hooks) (*AuthKit, error) {
+	if err := cfg.validate(); err != nil {
+		return nil, err
+	}
+
 	kit := &AuthKit{
 		cfg:   cfg,
 		hash:  newHashService(10),
-		jwt:   newJWTService(cfg.JWTIssuer, cfg.JWTSecret, cfg.JWTDuration),
+		jwt:   newJWT(cfg),
 		tx:    deps.Tx,
 		users: deps.Users,
 		hooks: hooks,
@@ -54,7 +67,7 @@ func New(cfg Config, deps Deps, hooks Hooks) *AuthKit {
 		kit.providers = newProviderService(deps.Providers)
 	}
 
-	return kit
+	return kit, nil
 }
 
 // Shutdown releases resources held by AuthKit.
@@ -63,5 +76,4 @@ func (kit *AuthKit) Shutdown() error {
 		return nil
 	}
 	return kit.cache.Shutdown()
-}
 }
