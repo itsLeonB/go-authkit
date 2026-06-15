@@ -2,6 +2,7 @@ package authkit
 
 import "errors"
 
+// Sentinel errors returned by authkit operations.
 var (
 	ErrUserNotFound            = errors.New("authkit: user not found")
 	ErrUserExists              = errors.New("authkit: user already exists")

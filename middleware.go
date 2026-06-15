@@ -2,17 +2,17 @@ package authkit
 
 import "context"
 
-// MWRequirements defines composable requirements for auth middleware.
+// MWRequirements defines composable bitflag requirements for auth middleware.
 type MWRequirements uint8
 
 const (
-	// RequireAuth requires a valid access token with active session.
+	// RequireAuth requires a valid access token with an active session.
 	RequireAuth MWRequirements = 1 << iota
 	// RequireVerified requires the user's email to be verified.
 	RequireVerified
 )
 
-// Claim key constants used in JWT tokens.
+// Claim key constants embedded in JWT access tokens.
 const (
 	ClaimUserID      = "userID"
 	ClaimSessionID   = "sessionID"
