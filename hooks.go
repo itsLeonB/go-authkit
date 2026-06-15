@@ -4,6 +4,10 @@ import "context"
 
 // Hooks holds optional callbacks for injecting application-specific logic.
 type Hooks struct {
+	// BeforeRegister is called before creating a new user.
+	// Return an error to reject registration.
+	BeforeRegister func(ctx context.Context, email string) error
+
 	// BeforeLogout runs before session revocation. Errors are non-blocking.
 	BeforeLogout func(ctx context.Context, sessionID string) error
 
@@ -20,6 +24,13 @@ type Hooks struct {
 	// It receives base claims and returns augmented claims for the token.
 	// Errors abort token issuance.
 	ClaimsBuilder func(ctx context.Context, userID string, baseClaims map[string]any) (map[string]any, error)
+}
+
+func (h Hooks) callBeforeRegister(ctx context.Context, email string) error {
+	if h.BeforeRegister == nil {
+		return nil
+	}
+	return h.BeforeRegister(ctx, email)
 }
 
 func (h Hooks) callBeforeLogout(ctx context.Context, sessionID string) error {

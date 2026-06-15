@@ -10,6 +10,10 @@ import (
 
 // GetOAuthURL generates an OAuth provider authorization URL.
 func (kit *AuthKit) GetOAuthURL(ctx context.Context, provider string) (string, error) {
+	if kit.cfg.Stateless {
+		return "", ErrNotSupported
+	}
+
 	ctx, span := kit.startSpan(ctx, "AuthKit.GetOAuthURL")
 	defer endSpan(span)
 
@@ -32,6 +36,10 @@ func (kit *AuthKit) GetOAuthURL(ctx context.Context, provider string) (string, e
 
 // HandleOAuthCallback processes the OAuth provider callback.
 func (kit *AuthKit) HandleOAuthCallback(ctx context.Context, provider, code, state string) (TokenSet, error) {
+	if kit.cfg.Stateless {
+		return TokenSet{}, ErrNotSupported
+	}
+
 	ctx, span := kit.startSpan(ctx, "AuthKit.HandleOAuthCallback")
 	defer endSpan(span)
 

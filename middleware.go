@@ -31,13 +31,19 @@ func (kit *AuthKit) VerifyToken(ctx context.Context, token, fingerprint string) 
 		return nil, ErrTokenInvalid
 	}
 
-	// Verify fingerprint
-	expectedHash, ok := claims[ClaimFingerprint].(string)
-	if !ok || expectedHash == "" {
-		return nil, ErrTokenInvalid
+	if kit.cfg.Stateless {
+		return claims, nil
 	}
-	if hashSHA256(fingerprint) != expectedHash {
-		return nil, ErrTokenInvalid
+
+	// Verify fingerprint
+	if kit.cfg.fingerprintEnabled() {
+		expectedHash, ok := claims[ClaimFingerprint].(string)
+		if !ok || expectedHash == "" {
+			return nil, ErrTokenInvalid
+		}
+		if hashSHA256(fingerprint) != expectedHash {
+			return nil, ErrTokenInvalid
+		}
 	}
 
 	// Extract and validate session
