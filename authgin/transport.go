@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 	"time"
+
+	"github.com/itsLeonB/go-authkit"
 )
 
 const (
@@ -28,8 +30,11 @@ type CookieTransport struct {
 }
 
 // NewCookieTransport creates a new CookieTransport.
-func NewCookieTransport(cfg CookieConfig) *CookieTransport {
-	return &CookieTransport{cfg: cfg}
+func NewCookieTransport(cfg CookieConfig) (*CookieTransport, error) {
+	if cfg.SameSite == http.SameSiteNoneMode && !cfg.Secure {
+		return nil, authkit.ErrInsecureCookieTransport
+	}
+	return &CookieTransport{cfg: cfg}, nil
 }
 
 func (ct *CookieTransport) SetTokens(w http.ResponseWriter, access, refresh, fingerprint string) {
