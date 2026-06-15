@@ -11,7 +11,7 @@ import (
 )
 
 func newStatelessTestKit(opts ...func(*AuthKit)) *AuthKit {
-	kit := New(Config{
+	kit, err := New(Config{
 		Stateless:   true,
 		JWTIssuer:   "test",
 		JWTSecret:   "test-secret-that-is-long-enough-for-hs256-signing",
@@ -20,6 +20,9 @@ func newStatelessTestKit(opts ...func(*AuthKit)) *AuthKit {
 		Tx:    &mockTransactor{},
 		Users: newMockUserStore(),
 	}, Hooks{})
+	if err != nil {
+		panic(err)
+	}
 	for _, o := range opts {
 		o(kit)
 	}
