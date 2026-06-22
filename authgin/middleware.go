@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/itsLeonB/go-authkit"
+	"github.com/itsLeonB/ungerr"
 )
 
 var (
@@ -18,7 +19,7 @@ func AuthMiddleware(kit *authkit.AuthKit, transport *CookieTransport, _ authkit.
 	return func(c *gin.Context) {
 		token, err := transport.ReadAccessToken(c.Request)
 		if err != nil {
-			_ = c.Error(err)
+			_ = c.Error(ungerr.UnauthorizedError(err.Error()))
 			c.Abort()
 			return
 		}
@@ -27,7 +28,7 @@ func AuthMiddleware(kit *authkit.AuthKit, transport *CookieTransport, _ authkit.
 
 		claims, err := kit.VerifyToken(c.Request.Context(), token, fgp)
 		if err != nil {
-			_ = c.Error(err)
+			_ = c.Error(ungerr.UnauthorizedError(err.Error()))
 			c.Abort()
 			return
 		}
@@ -52,14 +53,14 @@ func CSRFMiddleware() gin.HandlerFunc {
 
 		csrfCookie, err := c.Cookie(csrfTokenCookie)
 		if err != nil || csrfCookie == "" {
-			_ = c.Error(ErrCSRFMissing)
+			_ = c.Error(ungerr.ForbiddenError(ErrCSRFMissing.Error()))
 			c.Abort()
 			return
 		}
 
 		csrfHeader := c.GetHeader("X-CSRF-Token")
 		if csrfHeader == "" || csrfHeader != csrfCookie {
-			_ = c.Error(ErrCSRFInvalid)
+			_ = c.Error(ungerr.ForbiddenError(ErrCSRFInvalid.Error()))
 			c.Abort()
 			return
 		}
