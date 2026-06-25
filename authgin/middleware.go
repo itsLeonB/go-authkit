@@ -15,7 +15,8 @@ var (
 )
 
 // AuthMiddleware returns a Gin middleware that validates access tokens.
-func AuthMiddleware(kit *authkit.AuthKit, transport *CookieTransport, _ authkit.MWRequirements) gin.HandlerFunc {
+// Accepts any authkit.TokenTransport (CookieTransport, BearerTransport, etc.).
+func AuthMiddleware(kit *authkit.AuthKit, transport authkit.TokenTransport, _ authkit.MWRequirements) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token, err := transport.ReadAccessToken(c.Request)
 		if err != nil {
