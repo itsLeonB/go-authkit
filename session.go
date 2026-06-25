@@ -42,8 +42,16 @@ func (kit *AuthKit) RefreshToken(ctx context.Context, rawRefreshToken string) (T
 			return err
 		}
 
-		rawFgp, fgpHash := generateFingerprint()
-		claims := buildBaseClaims(session, fgpHash)
+		var rawFgp string
+		claims := map[string]any{
+			ClaimUserID:    session.UserID,
+			ClaimSessionID: session.ID,
+		}
+		if kit.cfg.fingerprintEnabled() {
+			var fgpHash string
+			rawFgp, fgpHash = generateFingerprint()
+			claims[ClaimFingerprint] = fgpHash
+		}
 
 		if kit.hooks.ClaimsBuilder != nil {
 			claims, err = kit.hooks.ClaimsBuilder(ctx, session.UserID, claims)
@@ -69,8 +77,16 @@ func (kit *AuthKit) createTokenAndSession(ctx context.Context, user User) (Token
 		return TokenSet{}, err
 	}
 
-	rawFgp, fgpHash := generateFingerprint()
-	claims := buildBaseClaims(session, fgpHash)
+	var rawFgp string
+	claims := map[string]any{
+		ClaimUserID:    session.UserID,
+		ClaimSessionID: session.ID,
+	}
+	if kit.cfg.fingerprintEnabled() {
+		var fgpHash string
+		rawFgp, fgpHash = generateFingerprint()
+		claims[ClaimFingerprint] = fgpHash
+	}
 
 	if kit.hooks.ClaimsBuilder != nil {
 		claims, err = kit.hooks.ClaimsBuilder(ctx, session.UserID, claims)
@@ -146,14 +162,6 @@ func (kit *AuthKit) getRefreshToken(ctx context.Context, rawToken string) (Refre
 		return RefreshToken{}, err
 	}
 	return rt, nil
-}
-
-func buildBaseClaims(session Session, fgpHash string) map[string]any {
-	return map[string]any{
-		ClaimUserID:      session.UserID,
-		ClaimSessionID:   session.ID,
-		ClaimFingerprint: fgpHash,
-	}
 }
 
 func generateFingerprint() (raw, hash string) {
